@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"golang-online-shop/handler"
+	"golang-online-shop/middleware"
 	"net/http"
 	"os"
 
@@ -39,9 +40,9 @@ func main() {
 	r.POST("/api/v1/orders/:id/confirm")
 	r.GET("/api/v1/orders/:id")
 
-	r.POST("/admin/products", handler.CreateProduct(db))
-	r.PUT("/admin/products/:id", handler.UpdateProduct(db))
-	r.DELETE("/admin/products/:id", handler.DeleteProduct(db))
+	r.POST("/admin/products", middleware.AdminOnly(), handler.CreateProduct(db))
+	r.PUT("/admin/products/:id", middleware.AdminOnly(), handler.UpdateProduct(db))
+	r.DELETE("/admin/products/:id", middleware.AdminOnly(), handler.DeleteProduct(db))
 
 	server := &http.Server{
 		Addr:    ":8080",
