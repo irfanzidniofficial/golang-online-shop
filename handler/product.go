@@ -92,16 +92,6 @@ func UpdateProduct(db *sql.DB) gin.HandlerFunc {
 			c.JSON(400, gin.H{"error": "Product data not valid"})
 			return
 		}
-		// if err != nil {
-		// 	if errors.Is(err, sql.ErrNoRows) {
-		// 		log.Printf("An error occurred while retrieving the product: %v\n", err)
-		// 		c.JSON(404, gin.H{"error": "Product not found"})
-		// 		return
-		// 	}
-		// 	log.Printf("An error occurred while retrieving the product: %v\n", err)
-		// 	c.JSON(500, gin.H{"error": "There is an error"})
-		// 	return
-		// }
 
 		if productReq.Name != "" {
 			product.Name = productReq.Name
@@ -122,5 +112,17 @@ func UpdateProduct(db *sql.DB) gin.HandlerFunc {
 }
 
 func DeleteProduct(db *sql.DB) gin.HandlerFunc {
-	return func(c *gin.Context) {}
+	return func(c *gin.Context) {
+
+		id := c.Param("id")
+
+		if err := model.DeleteProduct(db, id); err != nil {
+			log.Printf("An error occurred while update the product: %v\n", err)
+			c.JSON(500, gin.H{"error": "Product data not valid"})
+			return
+
+		}
+
+		c.JSON(204, nil)
+	}
 }
