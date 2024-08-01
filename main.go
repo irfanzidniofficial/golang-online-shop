@@ -35,7 +35,7 @@ func main() {
 
 	r.GET("/api/v1/products", handler.ListProducts(db))
 	r.GET("/api/v1/products/:id", handler.GetProducts(db))
-	r.POST("/api/v1/checkout")
+	r.POST("/api/v1/checkout", handler.ChekoutOrder(db))
 
 	r.POST("/api/v1/orders/:id/confirm")
 	r.GET("/api/v1/orders/:id")
