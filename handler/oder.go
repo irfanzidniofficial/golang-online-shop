@@ -105,6 +105,73 @@ func generatePasscode(length int) string {
 
 func ConfirmOrder(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// TODO: get id from param
+		id := c.Param("id")
+
+		// TODO: red request body
+		var confirmReq model.Confirm
+		if err := c.BindJSON(&confirmReq); err != nil {
+			log.Printf("An error occurred read request body: %v\n", err)
+			c.JSON(400, gin.H{"error": "an error occurred on the server"})
+			return
+
+		}
+
+		// TODO: get order from database
+		order, err := model.SelectOrderByID(db, id)
+		if err != nil {
+			log.Printf("An error occurred read product order: %v\n", err)
+			c.JSON(400, gin.H{"error": "Product order not valid"})
+			return
+
+		}
+
+		if order.Passcode == nil {
+			log.Println("Passcode not valid")
+			c.JSON(400, gin.H{"error": "Product order not valid"})
+			return
+
+		}
+
+		// TODO: match the order password
+		if err = bcrypt.CompareHashAndPassword([]byte(*order.Passcode), []byte(confirmReq.Passcode)); err != nil {
+			log.Println("An error occurred while matching the password")
+			c.JSON(401, gin.H{"error": "not permitted to access orders"})
+			return
+
+		}
+
+		// TODO: make sure the order has not been paid
+		if order.PaidAt != nil {
+			log.Println("order has been paid")
+			c.JSON(400, gin.H{"error": "order has been paid"})
+			return
+
+		}
+
+		// TODO: match the payment amount
+		if order.GrandTotal != confirmReq.Amount {
+			log.Printf("the price amount does not match: %v", confirmReq.Amount)
+			c.JSON(400, gin.H{"error": "payment amount does not match"})
+			return
+
+		}
+		// TODO: update the order status information
+		current := time.Now()
+		if err = model.UpdateOrderByID(db, id, confirmReq, current); err != nil {
+			log.Printf("An error occurred while updating the order data: %v\n", err)
+			c.JSON(400, gin.H{"error": "Product order not valid"})
+			return
+
+		}
+
+		order.Passcode = nil
+
+		order.PaidAt = &current
+		order.PaidBank = &confirmReq.Bank
+		order.PaidAccountNumber = &confirmReq.AccountNumber
+
+		c.JSON(200, order)
 
 	}
 }
